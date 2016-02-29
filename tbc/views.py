@@ -1188,7 +1188,6 @@ def BrowseBooks(request):
     context['category'] = category
     return render_to_response('tbc/browse-books.html', context)
 
-
 def ConvertNotebook(request, notebook_path=None):
     context = {}
     path = local.path
@@ -1197,29 +1196,21 @@ def ConvertNotebook(request, notebook_path=None):
     notebook_name = notebook_name[0].split(".")[0]
     path = path.split("/")[0:-1]
     path = "/".join(path)+"/"
-    os.chdir(path) # I am not sure about this! -Mahesh
     template = path+notebook_name+".html"
     notebook_html = str(path+notebook_name+".html")
     notebook_ipynb =str(path+notebook_name+".ipynb")
-    changed_time = os.stat(path+notebook_name+".html").st_mtime
-    modified_time = os.stat(path+notebook_name+".ipynb").st_mtime
-    ######################################################################################################################################
+    changed_time = float(os.stat(path+notebook_name+".html").st_mtime)
+    modified_time = float(os.stat(path+notebook_name+".ipynb").st_mtime)
 
-    try:
-        if os.path.isfile(notebook_html) and float(changed_time) > float(modified_time):
-            template = notebook_html
-            return render_to_response(template, {})
-        else:
-            notebook_convert = "ipython nbconvert --to html %s" % str(notebook_ipynb)
-            os.popen(notebook_convert)
-            template = notebook_html
-            return render_to_response(template, {})
-    
-    except Exception as error:
-	
-        return HttpResponse("Oops! It seems like the page you are trying to view is unavailable due to {0} Sorry about that :(".format(error))
+    if os.path.isfile(notebook_html) and changed_time > modified_time:
+        template = notebook_html
+        return render_to_response(template, {})
+    else:
+        notebook_convert = "ipython nbconvert --to html %s" % str(notebook_ipynb)
+        subprocess.call (notebook_convert)
+        template = notebook_html
+        return render_to_response(template, {})
 
-##################################################################################################################################
 
 def CompletedBooks(request):
     context = {}
